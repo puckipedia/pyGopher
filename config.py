@@ -38,8 +38,6 @@ class GopherConfig(gopher.DefaultConfig):
 	def not_found(self, socket, data):
 		MenuGetter([
 			ErrorEntry("Path {} not found!".format(data[0])),
-			InfoEntry("STOP TRIPPING"),
-			ErrorEntry("NO REALLY"),
 			InfoEntry("Did you spell it correctly?")]).output_data(socket, [])
 		print("NOT FOUND")
 
