@@ -60,3 +60,16 @@ class ExecutableGetter(Getter):
 				socket.sendall(line)
 		if not self.binary:
 			socket.sendall("\r\n.\r\n".encode("UTF-8"))
+class BinaryFileGetter(Getter):
+	file_path = ""
+
+	def __init__(self, path):
+		self.file_path = path
+
+	def output_data(self, socket, extra_info):
+		file = open(self.file_path, 'rb')
+		data = file.read(1024)
+		while len(data) > 0:
+			socket.sendall(data)
+			data = file.read(1024)
+

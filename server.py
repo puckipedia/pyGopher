@@ -1,16 +1,20 @@
 import socket
 import sys
-from config import GopherConfig
+import threading
+import imp
+import signal
 
-config = GopherConfig()
+import config
 
-for i, getter in config.data.items():
-	getter.set_default(config.host, config.port)
+server_config = config.GopherConfig()
+
+for i, getter in server_config.data.items():
+	getter.set_default(server_config.host, server_config.port)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
-	sock.bind(("", int(config.port)))
+	sock.bind(("", int(server_config.port)))
 except socket.error as msg:
 	print("Error: ")
 	print(msg)
@@ -21,24 +25,53 @@ except ValueError as e:
 
 sock.listen(10)
 
-def one_sock(conn, addr):
-	try:
-		socket_file = conn.makefile()
-		command_line = socket_file.readline()[:-1].split("\t")
+def reload_config(a, b):
+	imp.reload(config)
+	server_config = config.GopherConfig()
+	for i, getter in server_config.data.items():
+		getter.set_default(server_config.host, server_config.port)
+	print("Reloaded config! I haven't set the new host+port, however")
 
-		if command_line[0] == "":
-			command_line[0] = config.default
+signal.signal(signal.SIGUSR1, reload_config)
 
-		if command_line[0] not in config.data:
-			config.not_found(conn, command_line)
-		else:
-			config.data[command_line[0]].output_data(conn, command_line[1:])
-	except BaseException as ex:
-		config.on_exception(conn, ex)
-	finally:
-		conn.shutdown(socket.SHUT_RDWR)
-		conn.close()
+class GopherConnection(threading.Thread):
+	def __init__(self, connect, ip, port):
+		threading.Thread.__init__(self)
+		self.conn = connect
+		self.ip = ip
+		self.port = port
+		print("[+] Got connection!")
+	def run(self):
+		try:
+			socket_file = self.conn.makefile()
+			command_line = socket_file.readline()[:-1].split("\t")
+
+			print(command_line[0])
+			if command_line[0][-8:] == "HTTP/1.1":
+				path = command_line[0].split(" ")[1]
+				if path not in server_config.data:
+					server_config.not_found(self.conn, command_line)
+				else:
+					server_config.data[path].output_data(self.conn, command_line[1:])
+			else:
+				if command_line[0] == "":
+					command_line[0] = server_config.default
+
+				if command_line[0] not in server_config.data:
+					server_config.not_found(self.conn, command_line)
+				else:
+					server_config.data[command_line[0]].output_data(self.conn, command_line[1:])
+		except OSError as ex:
+			pass
+		except BaseException as ex:
+			server_config.on_exception(self.conn, ex)
+		finally:
+			self.conn.shutdown(socket.SHUT_RDWR)
+			self.conn.close()
 
 while True:
-	conn, addr = sock.accept()
-	one_sock(conn, addr)
+	try:
+		(conn, (ip, port)) = sock.accept()
+		GopherConnection(conn, ip, port).start()
+	except InterruptedError as e:
+		pass

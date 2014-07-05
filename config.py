@@ -6,19 +6,29 @@ from gopher.entries import *
 from gopher.getters import *
 
 class GopherConfig(gopher.DefaultConfig):
-	host = "localhost"
-	port = "7071"
+	host = "83.84.127.137"
+	port = 7076
 	default = "/"
 
+	http_host = "google.com"
+	http_port = 80
+
 	def __init__(self):
-		self.menu = MenuGetter([
+		self.get("/", MenuGetter([
 			InfoEntry(" -- This is a test! -- "),
-			DirectoryEntry("This is a directory entry", "/test1"),
-			FileEntry("Hello, World!", "/testhello")])
-		self.get("/", self.menu)
-		self.get("/test1", self.menu)
+			FileEntry("Hello, World!", "/testhello"),
+			DirectoryEntry("99 Bottles Of Beer", "/bottlesofbeer"),
+			DirectoryEntry("Another server", "/", host="smar.fi", port="7070"),
+			GIFImageEntry("An image!", "/trip")]))
+
+		self.get("/bottlesofbeer", MenuGetter([
+			FileEntry("99 Bottles Of Beer - Ran!", "/bottlesofbeer/run"),
+			FileEntry("99 Bottles Of Beer - Source!", "/bottlesofbeer/code")]))
+
 		self.get("/testhello", TextFileGetter("./www/test.txt"))
-		self.get("/bacon", ExecutableGetter("./www/bacon"))
+		self.get("/bottlesofbeer/run", ExecutableGetter("./www/bacon"))
+		self.get("/bottlesofbeer/code", TextFileGetter("./www/bacon"))
+		self.get("/trip", BinaryFileGetter("./www/image.gif"))
 
 	def not_found(self, socket, data):
 		MenuGetter([
