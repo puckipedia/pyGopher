@@ -6,12 +6,9 @@ from gopher.entries import *
 from gopher.getters import *
 
 class GopherConfig(gopher.DefaultConfig):
-	host = "83.84.127.137"
-	port = 7076
+	host = "localhost"
+	port = 7070
 	default = "/"
-
-	http_host = "google.com"
-	http_port = 80
 
 	def __init__(self):
 		self.get("/", MenuGetter([
