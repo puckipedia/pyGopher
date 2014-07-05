@@ -61,11 +61,12 @@ class GopherConnection(threading.Thread):
 					server_config.not_found(self.conn, command_line)
 				else:
 					server_config.data[command_line[0]].output_data(self.conn, command_line[1:])
+			self.conn.shutdown(socket.SHUT_RDWR)
+			self.conn.close()
 		except OSError as ex:
 			pass
 		except BaseException as ex:
 			server_config.on_exception(self.conn, ex)
-		finally:
 			self.conn.shutdown(socket.SHUT_RDWR)
 			self.conn.close()
 
