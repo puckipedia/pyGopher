@@ -82,8 +82,8 @@ class RedundantServerEntry(Entry):
 		super().__init__("+", name, selector, host, port)
 
 class TelnetEntry(Entry):
-	def __init__(self, name, selector, host="", port=""):
-		super().__init__("8", name, selector, host, port)
+	def __init__(self, name, username, host="", port=""):
+		super().__init__("8", name, username, host, port)
 
 class TN3270SessionEntry(Entry):
 	def __init__(self, name, selector, host="", port=""):
