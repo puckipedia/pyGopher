@@ -1,7 +1,7 @@
 import socket
 import sys
 import threading
-import imp
+import importlib
 import signal
 
 import config
@@ -26,7 +26,7 @@ except ValueError as e:
 sock.listen(10)
 
 def reload_config(a, b):
-	imp.reload(config)
+	importlib.reload(config)
 	server_config = config.GopherConfig()
 	for i, getter in server_config.data.items():
 		getter.set_default(server_config.host, server_config.port)
